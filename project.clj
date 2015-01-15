@@ -1,4 +1,4 @@
- (defproject recognize-digits "0.1.0-SNAPSHOT"
+(defproject recognize-digits "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -12,13 +12,12 @@
                  [net.mikera/vectorz-clj "0.28.0"]
                  [org.clojure/tools.namespace "0.2.8"]
                  [com.univocity/univocity-parsers "1.3.0"]
-		[incanter-gorilla "0.1.0"]  
-               ]
+                 [gorilla-tools "0.1.0-SNAPSHOT"]
+                 [incanter-gorilla "0.1.0"]
+                 [cc.artifice/clj-ml "0.5.1"]
+            ]
   :plugins [[lein-gorilla "0.3.5-SNAPSHOT" ]
-[cider/cider-nrepl "0.8.2"]
+            [cider/cider-nrepl "0.8.2"]]
 
-]
-
-:jvm-opts ["-Xmx2g" "-server"]
-:profiles {:dev {:dependencies [[alembic "0.3.2"]]}}
- )
+  :jvm-opts ["-Xmx2g" "-server"]
+  :profiles {:dev {:dependencies [[alembic "0.3.2"]]}})

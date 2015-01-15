@@ -19,35 +19,59 @@
             [clojure.core.matrix :as m]
             [clojure.core.matrix.dataset :as ds]
             [clojure.repl :refer [doc source]]
+            [clj-ml.classifiers :as ml-classifier]
+            [clj-ml.data :as ml-data]
             recognize-digits.utils)
              
   )
 ;; @@
-;; =>
-;;; {"type":"html","content":"<span class='clj-nil'>nil</span>","value":"nil"}
-;; <=
 
 ;; @@
 (def memo-read-csv (memoize recognize-digits.utils/read-csv))
 ;; @@
-;; =>
-;;; {"type":"html","content":"<span class='clj-var'>#&#x27;recognize-digits.ws/memo-read-csv</span>","value":"#'recognize-digits.ws/memo-read-csv"}
-;; <=
 
 ;; @@
-(def train-ds (memo-read-csv "train.csv" 10))
+(def train-ds (memo-read-csv "train.csv" 2000))
+(def train-ds (ds/update-column train-ds "label" #(keyword (.toString %))))
 
 ;; @@
-;; ->
-;;; 1014007353
-;; <-
-;; =>
-;;; {"type":"html","content":"<span class='clj-var'>#&#x27;recognize-digits.ws/train-ds</span>","value":"#'recognize-digits.ws/train-ds"}
-;; <=
 
 ;; @@
 (m/shape train-ds)
+
+
 ;; @@
-;; =>
-;;; {"type":"list-like","open":"<span class='clj-vector'>[</span>","close":"<span class='clj-vector'>]</span>","separator":" ","items":[{"type":"html","content":"<span class='clj-unkown'>10</span>","value":"10"},{"type":"html","content":"<span class='clj-unkown'>785</span>","value":"785"}],"value":"[10 785]"}
-;; <=
+
+;; @@
+(def classes (vec (map  #(keyword (.toString %)) (range 0 10))))
+(def attributes (take-last 784 (ds/column-names train-ds)))
+
+(def bayes-classifier (ml-classifier/make-classifier :bayes :naive))
+(def digit-template (cons {"label" classes} attributes))
+
+;; @@
+
+;; @@
+(def instances (m/to-nested-vectors train-ds))
+
+;; @@
+
+;; @@
+(def train-ml-ds (ml-data/make-dataset "digits" digit-template instances))
+(def train-ml-ds (ml-data/dataset-set-class train-ml-ds 0))  
+;; @@
+
+;; @@
+(def training-result (ml-classifier/classifier-train bayes-classifier train-ml-ds))
+;; @@
+
+;; @@
+(def evaluation (ml-classifier/classifier-evaluate bayes-classifier :cross-validation train-ml-ds 10))
+(println (:summary evaluation))
+(println (:confusion-matrix evaluation))
+
+;; @@
+
+;; @@
+
+;; @@

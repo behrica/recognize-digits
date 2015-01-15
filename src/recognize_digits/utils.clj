@@ -10,7 +10,7 @@
 
 (defn- create-settings []
   (let [settings (CsvParserSettings.)]
-    (-> settings  (.setMaxColumns 10000))
+    (-> settings  (.setMaxColumns 1000 ))
     (-> settings .getFormat (.setLineSeparator "/r"))
     settings
     )
@@ -22,7 +22,8 @@
   (lazy-seq
    (when-let [val (.parseNext parser)
             ]
-     (print (first val))
+     (if (= 0 (rand-int 1000))
+	 (print (first val)))
      (cons (map to-int (vec val)) (query-seq parser)))))
 
 (defn read-csv [filename n]
