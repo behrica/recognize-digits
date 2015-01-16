@@ -28,36 +28,32 @@
 
 ;; @@
 (def memo-read-csv (memoize recognize-digits.utils/read-csv))
-;; @@
-
-;; @@
-(def train-ds (memo-read-csv "train.csv" 2000))
-(def train-ds (ds/update-column train-ds "label" #(keyword (.toString %))))
-
-;; @@
-
-;; @@
-(m/shape train-ds)
-
-
-;; @@
-
-;; @@
 (def classes (vec (map  #(keyword (.toString %)) (range 0 10))))
-(def attributes (take-last 784 (ds/column-names train-ds)))
+;; @@
+
+;; @@
+(defn get-ml-dataset [filename size]
+  (let [ds (memo-read-csv filename size)
+        ds (ds/update-column ds "label" #(keyword (.toString %)))
+        instances (m/to-nested-vectors ds)
+        attributes (take-last 784 (ds/column-names train-ds))
+        digit-template (cons {"label" classes} attributes)
+        train-ml-ds (ml-data/make-dataset "digits" digit-template instances)
+         ]
+    train-ml-ds	
+    )
+  	
+  )
+;; @@
+
+;; @@
 
 (def bayes-classifier (ml-classifier/make-classifier :bayes :naive))
-(def digit-template (cons {"label" classes} attributes))
 
 ;; @@
 
 ;; @@
-(def instances (m/to-nested-vectors train-ds))
-
-;; @@
-
-;; @@
-(def train-ml-ds (ml-data/make-dataset "digits" digit-template instances))
+(def train-ml-ds (get-ml-dataset "train.csv" 100))
 (def train-ml-ds (ml-data/dataset-set-class train-ml-ds 0))  
 ;; @@
 
