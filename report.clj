@@ -117,24 +117,28 @@
   (let [v (partition 28 (take-last 784 (ml-data/instance-to-vector digit)))
     	v (vec (map vec v))]
 	(chart-view (heat-map-2d-vector-transposed* v 0))))
+
+(defn seq-contains? [coll target] (some #(= target %) coll))
  
 ;; @@
 
 ;; @@
 (def memo-read-csv (memoize recognize-digits.utils/read-csv))
 (def classes (vec (map  #(keyword (.toString %)) (range 0 10))))
+(def attributes (map #(format "pixel%d" %) (range 0 784)))
 ;; @@
 
 ;; @@
-(defn get-ml-dataset [filename size]
+(defn get-ml-dataset [filename size ds-name template]
   (let [ds (memo-read-csv filename size)
-        ds (ds/update-column ds "label" #(keyword (.toString %)))
+        ds (if (seq-contains? (ds/column-names ds) "label")
+          		(ds/update-column ds "label" #(keyword (.toString %)))
+             	(ds/add-column ds "label" (vec (repeat size :NA)))
+             	)
         instances (m/to-nested-vectors ds)
-        attributes (take-last 784 (ds/column-names ds))
-        digit-template (cons {"label" classes} attributes)
-        train-ml-ds (ml-data/make-dataset "digits" digit-template instances)
+        ml-ds (ml-data/make-dataset ds-name template instances)
          ]
-    train-ml-ds))
+    ml-ds))
 ;; @@
 
 ;; @@
@@ -144,7 +148,7 @@
 ;; @@
 
 ;; @@
-(def train-ml-ds (get-ml-dataset "train.csv" 100))
+(def train-ml-ds (get-ml-dataset "train.csv" 100 "digit-train" (cons {"label" classes} attributes)))
 (def train-ml-ds (ml-data/dataset-set-class train-ml-ds 0))  
 ;; @@
 
@@ -160,12 +164,49 @@
 ;; @@
 
 ;; @@
-(ml-classifier/classifier-classify bayes-classifier (second train-ml-ds))
-;; @@
+(def template (conj (vec attributes) {"label" (cons :NA classes)}))
+(def test-ml-ds (get-ml-dataset "test.csv" 10 "digit-test" template))
+(def test-ml-ds (ml-data/dataset-set-class test-ml-ds 784))  
+
+
+(ml-classifier/classifier-classify bayes-classifier (first (ml-data/dataset-seq test-ml-ds)))
+
 
 ;; @@
 
+;; @@
 (map view-digit (take 2 (ml-data/dataset-seq train-ml-ds)))
+
+;; @@
+
+;; @@
+(def template (conj (vec attributes) {"label" classes}))
+template
+
+(def ds (memo-read-csv "test.csv" 2))
+(def ds (if (seq-contains? (ds/column-names ds) "label")
+          		(ds/update-column ds "label" #(keyword (.toString %)))
+             	(ds/add-column ds "label" (vec (repeat 2 :NA)))
+             	))
+(def instances (m/to-nested-vectors ds))
+instances
+(ml-data/make-dataset "ds-name" template instances)
+;ds
+
+;; @@
+
+;; @@
+(def template (cons {"label" classes} attributes))
+template
+(def ds (memo-read-csv "train.csv" 2))
+(def ds (if (seq-contains? (ds/column-names ds) "label")
+          		(ds/update-column ds "label" #(keyword (.toString %)))
+             	(ds/add-column ds "label" (vec (repeat 2 :NA)))
+             	))
+(def instances (m/to-nested-vectors ds))
+instances
+(ml-data/make-dataset "ds-name" template instances)
+;ds
 
 ;; @@
 
