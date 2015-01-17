@@ -19,5 +19,6 @@
   :plugins [[lein-gorilla "0.3.5-SNAPSHOT" ]
             [cider/cider-nrepl "0.8.2"]]
 
-  :jvm-opts ["-Xmx2g" "-server"]
+  :jvm-opts ["-Xmx4g" "-server" "-XX:+PrintGC"]
   :profiles {:dev {:dependencies [[alembic "0.3.2"]]}})
+x

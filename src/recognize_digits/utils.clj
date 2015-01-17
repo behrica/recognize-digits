@@ -17,13 +17,12 @@
   )
 
 (defn to-int [x] (Integer/valueOf x))
-
 (defn query-seq [parser]
   (lazy-seq
    (when-let [val (.parseNext parser)
             ]
      (if (= 0 (rand-int 1000))
-	 (print (first val)))
+       (println (first val)))
      (cons (map to-int (vec val)) (query-seq parser)))))
 
 (defn read-csv [filename n]

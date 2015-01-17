@@ -130,86 +130,47 @@
 
 ;; @@
 (defn get-ml-dataset [filename size ds-name template]
-  (let [ds (memo-read-csv filename size)
+  (let [ds (time (memo-read-csv filename size))
         ds (if (seq-contains? (ds/column-names ds) "label")
           		(ds/update-column ds "label" #(keyword (.toString %)))
-             	(ds/add-column ds "label" (vec (repeat size :NA)))
-             	)
-        instances (m/to-nested-vectors ds)
-        ml-ds (ml-data/make-dataset ds-name template instances)
-         ]
-    ml-ds))
+             	
+                 (let [new-ds (ds/dataset {"label" (vec (repeat size :1))})]
+                     (time (ds/join-columns new-ds ds))))
+        instances (time (m/to-nested-vectors ds)) ]
+    (time (ml-data/make-dataset ds-name template instances))))
 ;; @@
 
 ;; @@
-
 (def bayes-classifier (ml-classifier/make-classifier :bayes :naive))
-
 ;; @@
 
 ;; @@
-(def train-ml-ds (get-ml-dataset "train.csv" 100 "digit-train" (cons {"label" classes} attributes)))
-(def train-ml-ds (ml-data/dataset-set-class train-ml-ds 0))  
+(time (def train-ml-ds (get-ml-dataset "train.csv" 42000 "digit-train" (cons {"label" classes} attributes))))
+(time (def train-ml-ds (ml-data/dataset-set-class train-ml-ds 0)))  
 ;; @@
 
 ;; @@
-(def training-result (ml-classifier/classifier-train bayes-classifier train-ml-ds))
+(time (def training-result (ml-classifier/classifier-train bayes-classifier train-ml-ds)))
 ;; @@
 
 ;; @@
-(def evaluation (ml-classifier/classifier-evaluate bayes-classifier :cross-validation train-ml-ds 10))
+(time (def evaluation (ml-classifier/classifier-evaluate bayes-classifier :cross-validation train-ml-ds 10)))
 (println (:summary evaluation))
 (println (:confusion-matrix evaluation))
-
 ;; @@
 
 ;; @@
-(def template (conj (vec attributes) {"label" (cons :NA classes)}))
-(def test-ml-ds (get-ml-dataset "test.csv" 10 "digit-test" template))
-(def test-ml-ds (ml-data/dataset-set-class test-ml-ds 784))  
 
-
-(ml-classifier/classifier-classify bayes-classifier (first (ml-data/dataset-seq test-ml-ds)))
-
-
-;; @@
-
-;; @@
-(map view-digit (take 2 (ml-data/dataset-seq train-ml-ds)))
-
-;; @@
-
-;; @@
-(def template (conj (vec attributes) {"label" classes}))
-template
-
-(def ds (memo-read-csv "test.csv" 2))
-(def ds (if (seq-contains? (ds/column-names ds) "label")
-          		(ds/update-column ds "label" #(keyword (.toString %)))
-             	(ds/add-column ds "label" (vec (repeat 2 :NA)))
-             	))
-(def instances (m/to-nested-vectors ds))
-instances
-(ml-data/make-dataset "ds-name" template instances)
-;ds
-
-;; @@
-
-;; @@
 (def template (cons {"label" classes} attributes))
-template
-(def ds (memo-read-csv "train.csv" 2))
-(def ds (if (seq-contains? (ds/column-names ds) "label")
-          		(ds/update-column ds "label" #(keyword (.toString %)))
-             	(ds/add-column ds "label" (vec (repeat 2 :NA)))
-             	))
-(def instances (m/to-nested-vectors ds))
-instances
-(ml-data/make-dataset "ds-name" template instances)
-;ds
+(time (def test-ml-ds (get-ml-dataset "test.csv" 28000 "digit-test" template)))
+(def test-ml-ds (ml-data/dataset-set-class test-ml-ds 0))  
+;; @@
+
+;; @@
+(time (def predictions (map #(ml-classifier/classifier-classify bayes-classifier %) (ml-data/dataset-seq test-ml-ds))))
 
 ;; @@
 
 ;; @@
-
+(spit "predictions.csv"(clojure.string/join "\n" (map name predictions)))
 ;; @@
